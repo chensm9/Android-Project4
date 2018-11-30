@@ -66,9 +66,20 @@ if (mediaPlayer != null) {
 ```java
 public final IBinder binder = new MyBinder();
 public class MyBinder extends Binder {
-	MusicService getService() {
-		return MusicService.this;
-	}
+	@Override
+        protected boolean onTransact(int code, @NonNull Parcel data, @Nullable Parcel reply, int flags) throws RemoteException {
+            switch (code) {
+                //service solve
+                case PLAY_CODE:
+                	...
+                    break;
+                case STOP_CODE:
+                    ...
+                    break;
+                ...
+            }
+            return super.onTransact(code, data, reply, flags);
+        }
 }
 ```
 在Activity中调用bindService保持与Service的通信（写在Activity类）：
@@ -82,9 +93,15 @@ bindService成功后回调onServiceConnected函数，通过IBinder获取Service�
 private ServiceConnection sc = new ServiceConnection() {
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder service) {
-		ms = ((MusicService.MyBinder)service).getService();
+		mBinder = service;
 	}
 }
+```
+通过IBinder对象控制Service
+```
+Parcel data = Parcel.obtain();
+Parcel reply = Parcel.obtain();
+mBinder.transact(STOP_CODE, data, reply, 0);
 ```
 停止服务时，必须解除绑定，写入退出按钮中
 ```java
@@ -138,3 +155,9 @@ seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
 ### 9. 解析MP3文件中的歌曲信息
 [参考](https://www.jianshu.com/p/e38178f008ab)
+
+### 10. rxJava的使用
+使用时注意rxJava1和rxJava2的差异，
+在Observable对象中查询歌曲的播放时间，用onNext方法传递给Observer。Observer对象观察到Observable发送的播放时间后，完成UI的更新。
+[参考](http://gank.io/post/560e15be2dca930e00da1083#toc_4)
+[参考](https://www.jianshu.com/p/c935d0860186)
