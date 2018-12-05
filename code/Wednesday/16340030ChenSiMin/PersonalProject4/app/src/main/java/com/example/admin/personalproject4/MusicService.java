@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.RemoteException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,19 +14,35 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import io.reactivex.annotations.NonNull;
+import io.reactivex.annotations.Nullable;
+
 public class MusicService extends Service {
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private String path;
     public final IBinder binder = new MyBinder();
     public class MyBinder extends Binder {
-        MusicService getService() {
-            return MusicService.this;
+        @Override
+        protected boolean onTransact(int code, @NonNull Parcel data, @Nullable Parcel reply, int flags) throws RemoteException {
+            switch (code) {
+                //service solve
+                case 0:  play(); break;
+                case 1:  stop(); break;
+                case 2: reply.writeInt(isPlaying()); break;
+                case 3: reply.writeInt(getCurrenPostion()); break;
+                case 4: reply.writeInt(getDuration()); break;
+                case 5: seekTo(data.readInt()); break;
+                case 6: reply.writeString(getPath()); break;
+                case 7: setPath(data.readString()); break;
+                default: break;
+            }
+            return super.onTransact(code, data, reply, flags);
         }
     }
 
     public MusicService() {
         try {
-            path = initPath();
+            setPath(initPath());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -64,21 +82,11 @@ public class MusicService extends Service {
     }
 
     // 是否播放中
-    public boolean isPlaying() {
-        return mediaPlayer.isPlaying();
-    }
-
-    // 设置当前播放器
-    public void setMediaPlayer(MediaPlayer mediaPlayer_) {
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-        }
-        mediaPlayer = mediaPlayer_;
-        try {
-            mediaPlayer.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public int isPlaying() {
+        if (mediaPlayer.isPlaying())
+            return 1;
+        else
+            return 0;
     }
 
     // 停止播放
@@ -94,7 +102,6 @@ public class MusicService extends Service {
         }
     }
 
-
     //返回歌曲的长度，单位为毫秒
     public int getDuration(){
         return mediaPlayer.getDuration();
@@ -108,6 +115,21 @@ public class MusicService extends Service {
     //设置歌曲播放的进度，单位为毫秒
     public void seekTo(int mesc){
         mediaPlayer.seekTo(mesc);
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+        try {
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(path);
+            mediaPlayer.prepare();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getPath() {
+        return path;
     }
 
     private String  initPath() throws IOException {
@@ -148,13 +170,5 @@ public class MusicService extends Service {
             }
         }
         return file.getPath();
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public String getPath() {
-        return path;
     }
 }
