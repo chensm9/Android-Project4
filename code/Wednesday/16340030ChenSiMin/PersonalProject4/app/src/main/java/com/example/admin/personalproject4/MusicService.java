@@ -42,7 +42,7 @@ public class MusicService extends Service {
 
     public MusicService() {
         try {
-            setPath(initPath());
+            initPath();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -66,10 +66,6 @@ public class MusicService extends Service {
     @Override// 被关闭之前回调该方法
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    public MediaPlayer getMediaPlayer() {
-        return mediaPlayer;
     }
 
     // 播放、暂停
@@ -132,7 +128,7 @@ public class MusicService extends Service {
         return path;
     }
 
-    private String  initPath() throws IOException {
+    private void initPath() throws IOException {
         // 第一次运行应用程序时，加载数据库到data/data/当前包的名称/database/<db_name>
         File dir = new File("data/data/com.example.admin.personalproject4/data");
 
@@ -169,6 +165,7 @@ public class MusicService extends Service {
                 }
             }
         }
-        return file.getPath();
+        path = file.getPath();
+        setPath(path);
     }
 }

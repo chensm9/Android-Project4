@@ -60,12 +60,12 @@ public class MainActivity extends AppCompatActivity {
             mBinder = service;
             try {
                 // 获取音乐当前path并设置相关显示
-                initByMisicPath(getMusicPath());
+                initByMusicPath(getMusicPath());
             } catch (Exception e) {
                 e.printStackTrace();
             }
             // 启动rxJava观察者和被观察者
-            startMusicListen();
+            startProgressListen();
         }
 
         @Override
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
 //    };
 
     // 使用rxJava更新进度条
-    private void startMusicListen() {
+    private void startProgressListen() {
         final io.reactivex.Observable<Integer> observable = io.reactivex.Observable.create(new ObservableOnSubscribe<Integer>() {
 
             @Override
@@ -398,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
             String path = getPath(this, uri);
-            initByMisicPath(path);
+            initByMusicPath(path);
         }
     }
 
@@ -412,12 +412,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 根据音乐的路径初始化界面和后台播放器
-    public void initByMisicPath(String path) {
+    public void initByMusicPath(String path) {
         try {
             MediaPlayer mp = new MediaPlayer();
             mp.setDataSource(path);
             setMusicPath(path);
-//            ((MusicService.MyBinder)mBinder).setMediaPlayer(mp);
             // 设置进度条的最大值
             seekBar.setMax(getDuration());
             // 设置进度条的进度
